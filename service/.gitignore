@@ -1,0 +1,7 @@
+*.vs/
+*.db
+logs/
+WASP/bin
+WASP/obj
+*.cfg
+*.txt

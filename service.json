@@ -1,0 +1,6 @@
+{
+    "name": "wasp",
+    "ports": [5000, 5001],
+    "checkerport": 5002,
+    "description": "Wasp fun."
+}

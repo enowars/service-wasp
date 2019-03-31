@@ -1,0 +1,12 @@
+version: '2.3'
+services:
+  wasp:
+    build: .
+    tty: true # workaround for https://github.com/docker/compose/issues/3347
+    volumes:
+      - .:/service
+    mem_limit: 256m
+    mem_reservation: 128m
+    ports:
+      - "5000:5000"
+      - "5001:5001"

@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WAẞP</title>
+    <script src="/js/jquery.js"></script>
+    <script src="/js/bootstrap.js"></script>
+    <script src="/js/wasp.js"></script>
+    <link rel="stylesheet" href="/css/wasp.css">
+    <link rel="stylesheet" href="/css/bootstrap-3.3.7.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="/" class="navbar-brand">WAẞP</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/attacks">Attacks</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container body-content">
+        <h2>Plan new Attack</h2>
+        <form id="add">
+            Date:<br>
+            <input type="text" id="input-date" name="date"><br>
+            Location:<br>
+            <input type="text" id="input-location" name="location"><br>
+            Description:<br>
+            <input type="text" id="input-description" name="description"><br>
+            Password:<br>
+            <input type="text" id="input-password" name="password"><br>
+            <input type="submit"><br>
+        </form>
+
+        <h2>Search Attacks</h2>
+        <form id="search">
+            <input type="text" id="searchbox" />
+            <input type="submit" value="Search">
+        </form>
+        <div id="results-container">
+        </div>
+    </div>
+</body>
+</html>
