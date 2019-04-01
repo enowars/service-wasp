@@ -1,15 +1,22 @@
-FROM debian:latest
+FROM ubuntu:18.04
+LABEL maintainer="ENOFLAG <mail@enoflag.de>"
 
+# Install python3 and uswgi
+RUN apt-get update
+RUN apt-get install -y python3 python3-dev python3-pip nginx
+
+# use python3
+RUN pip3 install uwsgi
+
+# copy our files in.
+COPY ./ /checker
 WORKDIR /checker
 
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends apt-utils
-RUN apt-get install -y apt-transport-https
-RUN apt-get install -y git python3 python3-pip
+RUN pip3 install -r requirements.txt
+
+COPY ./nginx.conf /etc/nginx/sites-enabled/default
 
 EXPOSE 5002
 
-COPY . /checker
-
-CMD /checker/
-    
+# run it all.
+CMD service nginx start && uwsgi --ini ./uswgi.ini

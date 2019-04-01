@@ -1,1 +1,1 @@
-enochecker
+pip install git+https://github.com/domenukk/enochecker
