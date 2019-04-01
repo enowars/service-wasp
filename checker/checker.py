@@ -87,6 +87,6 @@ class WaspChecker(BaseChecker):
         pass
 
 
-service = WaspChecker.service
+app = WaspChecker.service
 if __name__ == "__main__":
     run(WaspChecker)
