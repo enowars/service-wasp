@@ -1,9 +1,12 @@
 version: '2.3'
 services:
-  wasp-checker:
+  wasp-backend:
     build: .
-    tty: true # workaround for https://github.com/docker/compose/issues/3347
-    mem_limit: 256m
-    mem_reservation: 128m
+  wasp-frontend:
+    image: nginx:1.13-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - wasp-backend
     ports:
-      - "5000:80"
+      - 5001:80
