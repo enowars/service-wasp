@@ -9,9 +9,8 @@ session = requests.Session()
 
 class WaspChecker(BaseChecker):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.port = 5000  # default port to send requests to.
+    port = 5000  # default port to send requests to.
+
 
     def putflag(self):
         tag = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
@@ -20,7 +19,7 @@ class WaspChecker(BaseChecker):
         self.debug("Putting Flag...")
         # / because why not
         self.http_get("/")
-        if self.call_idx % 2 == 0:
+        if self.flag_idx % 2 == 0:
             attack = {
                 "date": self.flag,
                 "location": "Berlin",
@@ -66,7 +65,7 @@ class WaspChecker(BaseChecker):
             raise BrokenServiceException("Invalid JSON: {}".format(r.text))
 
         try:
-            flag_field = "attackDate" if self.call_idx % 2 == 0 else "location"
+            flag_field = "attackDate" if self.flag_idx % 2 == 0 else "location"
             if attack_results["attack"][flag_field] != self.flag:
                 raise BrokenServiceException(
                     "Incorrect flag in date field (searched for {} in {} - {})".format(self.flag, attack_results,

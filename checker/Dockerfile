@@ -1,9 +1,9 @@
-FROM ubuntu:18.04
+FROM python
 LABEL maintainer="ENOFLAG <mail@enoflag.de>"
 
 # Install python3 and uswgi
 RUN apt-get update
-RUN apt-get install -y python3 python3-dev python3-pip nginx git
+RUN apt-get install -y nginx git
 
 # use python3
 RUN pip3 install uwsgi
