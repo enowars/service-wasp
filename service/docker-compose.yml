@@ -2,7 +2,6 @@ version: '3.4'
 
 services:
   wasp:
-    image: ${DOCKER_REGISTRY-}wasp
     build:
       context: .
       dockerfile: WASP/Dockerfile
