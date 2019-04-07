@@ -1,7 +1,6 @@
 *.vs/
+*.vscode/
 *.db
-logs/
-WASP/bin
-WASP/obj
-*.cfg
-*.txt
+*/bin/
+*/obj/
+data/

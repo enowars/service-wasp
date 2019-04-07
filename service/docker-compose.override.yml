@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+  wasp:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Release
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "5000:80"
+    volumes:
+      - ./data/wwwroot:/app/wwwroot/
+
