@@ -15,7 +15,7 @@ namespace WASP.Storage
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite(@"Filename=wwwroot/Wasp.db", x => x.SuppressForeignKeyEnforcement());
+            optionsBuilder.UseSqlite(@"Filename=wwwroot/data/Wasp.db", x => x.SuppressForeignKeyEnforcement());
         }
 
         public static void Migrate()

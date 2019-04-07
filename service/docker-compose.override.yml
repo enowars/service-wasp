@@ -8,5 +8,5 @@ services:
     ports:
       - "5000:80"
     volumes:
-      - ./data/wwwroot:/app/wwwroot/
+      - ./data:/app/wwwroot/data
 
