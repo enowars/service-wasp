@@ -1,46 +1,52 @@
-import requests
-import json
+import time
+import asyncio
+import logging
+import sys
+import aiohttp
 import random
 import string
-from enochecker import BaseChecker, BrokenServiceException, run
+import json
 
-session = requests.Session()
+from enochecker_async import BaseChecker, BrokenServiceException, create_app, OfflineException, ELKFormatter, CheckerTaskMessage
+from logging import LoggerAdapter
 
 
 class WaspChecker(BaseChecker):
+    port = 8000
 
-    port = 5000  # default port to send requests to.
+    def __init__(self):
+        super(WaspChecker, self).__init__("WASP", 8080)
 
-
-    def putflag(self):
+    async def putflag(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
         tag = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
-        self.team_db[self.flag] = tag
+        await collection.insert_one({ 'flag' : task.flag, 'tag': tag })
 
-        self.debug("Putting Flag...")
-        # / because why not
-        self.http_get("/")
-        if self.flag_idx % 2 == 0:
-            attack = {
-                "date": self.flag,
-                "location": "Berlin",
-                "description": "tasty bee hive! #{}".format(tag),
-                "password": self.flag
-            }
-        else:
-            attack = {
-                "date": "whenever",
-                "location": self.flag,
-                "description": "tasty bee hive! #{}".format(tag),
-                "password": self.flag
-            }
+        logger.debug("Putting Flag...")
+        async with asyncio.ClientSession() as session:
+            # / because why not
+            await session.get("http://" + task.address + ":" + port)
+            if task.flagIndex % 2 == 0:
+                attack = {
+                    "date": task.flag,
+                    "location": "Berlin",
+                    "description": "tasty bee hive! #{}".format(tag),
+                    "password": task.flag
+                }
+            else:
+                attack = {
+                    "date": "whenever",
+                    "location": task.flag,
+                    "description": "tasty bee hive! #{}".format(tag),
+                    "password": task.flag
+                }
 
-        # /AddAttack
-        self.http_post("/api/AddAttack", data=attack)
-        self.debug("Flag {} up with tag: {}.".format(self.flag, tag))
+            # /AddAttack
+            await session.post("http://" + task.address + ":" + port + "/api/AddAttack", data=attack)
+            logger.debug("Flag {} up with tag: {}.".format(task.flag, tag))
 
-    def getflag(self):
-        self.http_get("/")
-
+    async def getflag(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
+        return
+        await self.test(logger, collection)
         try:
             tag = self.team_db[self.flag]
         except KeyError as ex:
@@ -76,16 +82,20 @@ class WaspChecker(BaseChecker):
             raise BrokenServiceException(
                 "Error parsing json: {}. {} (expected: {})".format(attack_results, ex, self.flag))
 
-    def putnoise(self):
+    async def putnoise(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
         pass
 
-    def getnoise(self):
+    async def getnoise(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
         pass
 
-    def havoc(self):
+    async def havoc(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
         pass
 
+logger = logging.getLogger()
+handler = logging.StreamHandler(sys.stdout)
+#handler.setFormatter(ELKFormatter("%(message)s")) ELK-ready output
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
-app = WaspChecker.service
-if __name__ == "__main__":
-    run(WaspChecker)
+#app = create_app(WaspChecker(), "mongodb://127.0.0.1:27017")
+app = create_app(WaspChecker()) # mongodb://mongodb:27017

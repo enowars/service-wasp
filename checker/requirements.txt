@@ -1,1 +1,2 @@
-git+https://github.com/domenukk/enochecker
+enochecker-async==0.0.7
+aiohttp
