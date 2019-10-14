@@ -1,5 +1,4 @@
 import time
-import asyncio
 import logging
 import sys
 import aiohttp
@@ -9,7 +8,7 @@ import json
 
 from enochecker_async import BaseChecker, BrokenServiceException, create_app, OfflineException, ELKFormatter, CheckerTaskMessage
 from logging import LoggerAdapter
-
+from motor import MotorCollection
 
 class WaspChecker(BaseChecker):
     port = 8000
@@ -22,9 +21,9 @@ class WaspChecker(BaseChecker):
         await collection.insert_one({ 'flag' : task.flag, 'tag': tag })
 
         logger.debug("Putting Flag...")
-        async with asyncio.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             # / because why not
-            await session.get("http://" + task.address + ":" + port)
+            await session.get("http://" + task.address + ":" + str(WaspChecker.port))
             if task.flagIndex % 2 == 0:
                 attack = {
                     "date": task.flag,
@@ -41,7 +40,7 @@ class WaspChecker(BaseChecker):
                 }
 
             # /AddAttack
-            await session.post("http://" + task.address + ":" + port + "/api/AddAttack", data=attack)
+            await session.post("http://" + task.address + ":" + str(WaspChecker.port) + "/api/AddAttack", data=attack)
             logger.debug("Flag {} up with tag: {}.".format(task.flag, tag))
 
     async def getflag(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:

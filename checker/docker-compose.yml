@@ -3,8 +3,6 @@ services:
   wasp-checker:
     build: .
     ports:
-      - 4000:8080
-    restart: always
+      - 80:8080
   mongodb:
     image: mongo
-    restart: always
