@@ -92,9 +92,8 @@ class WaspChecker(BaseChecker):
 
 logger = logging.getLogger()
 handler = logging.StreamHandler(sys.stdout)
-#handler.setFormatter(ELKFormatter("%(message)s")) ELK-ready output
+handler.setFormatter(ELKFormatter("%(message)s")) #ELK-ready output
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
-#app = create_app(WaspChecker(), "mongodb://127.0.0.1:27017")
 app = create_app(WaspChecker()) # mongodb://mongodb:27017
