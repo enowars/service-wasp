@@ -14,7 +14,7 @@ class WaspChecker(BaseChecker):
     port = 8000
 
     def __init__(self):
-        super(WaspChecker, self).__init__("WASP", 8080)
+        super(WaspChecker, self).__init__("WASP", 8080, 2, 0, 0)
 
     async def putflag(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
         tag = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
