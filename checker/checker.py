@@ -23,7 +23,10 @@ class WaspChecker(BaseChecker):
         logger.debug("Putting Flag...")
         async with aiohttp.ClientSession() as session:
             # / because why not
-            await session.get("http://" + task.address + ":" + str(WaspChecker.port))
+            try:
+                await session.get("http://" + task.address + ":" + str(WaspChecker.port))
+            except Exception:
+                raise OfflineException()
             if task.flagIndex % 2 == 0:
                 attack = {
                     "date": task.flag,
