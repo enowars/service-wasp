@@ -43,46 +43,38 @@ class WaspChecker(BaseChecker):
                 }
 
             # /AddAttack
-            await session.post("http://" + task.address + ":" + str(WaspChecker.port) + "/api/AddAttack", data=attack)
+            try:
+                await session.post("http://" + task.address + ":" + str(WaspChecker.port) + "/api/AddAttack", data=attack)
+            except:
+                raise BrokenServiceException()
             logger.debug("Flag {} up with tag: {}.".format(task.flag, tag))
 
     async def getflag(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
-        return
-        await self.test(logger, collection)
-        try:
-            tag = self.team_db[self.flag]
-        except KeyError as ex:
-            raise BrokenServiceException("Inconsistent Database: Couldn't get tag for team/flag ({})".format(self.flag))
+        async with aiohttp.ClientSession() as session:
+            tag = collection.find_one({ 'flag': task.flag })
+            if tag is None:
+                raise BrokenServiceException("Could not find tag in db")
 
-        r = self.http_get("/api/SearchAttacks", params={"needle": tag})
-        self.info("Parsing search result")
-        try:
-            search_results = json.loads(r.text)
-            id = search_results["matches"][0]["id"]
-        except Exception as ex:
-            raise BrokenServiceException("Invalid JSON Response: {} ({})".format(r.text, ex))
+            r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/SearchAttacks", params={ "needle": tag})
+            search_result = await r.text()
+            try:
+                search_results = json.loads(search_result)
+                attack_id = search_results["matches"][0]["id"]
+            except:
+                raise BrokenServiceException(f"Invalid search response: {search_result}")
 
-        self.info("Found attack (id={})".format(id))
-        self.info("Fetching attack: {}".format({"id": id, "password": self.flag}))
-
-        r = self.http_get("/api/GetAttack", params={"id": id, "password": self.flag}, timeout=5, verify=False)
-        self.info("Parsing GetAttack result")
-        try:
-            attack_results = json.loads(r.text)
-        except Exception:
-            raise BrokenServiceException("Invalid JSON: {}".format(r.text))
-
-        try:
+            logger.info(f"Fetching attack id={attack_id} password={task.flag}")
+            r = await session.get("/api/GetAttack", params={"id": id, "password": self.flag}, timeout=5, verify=False)
+            get_result = await r.text()
+            try:
+                matches = json.loads(await r.text())
+            except:
+                raise BrokenServiceException(f"Invalid get response: {get_result}")
             flag_field = "attackDate" if self.flag_idx % 2 == 0 else "location"
-            if attack_results["attack"][flag_field] != self.flag:
+            if matches["attack"][flag_field] != self.flag:
                 raise BrokenServiceException(
-                    "Incorrect flag in date field (searched for {} in {} - {})".format(self.flag, attack_results,
+                    "Incorrect flag in date field (searched for {} in {} - {})".format(task.flag, matches,
                                                                                        flag_field))
-        except Exception as ex:
-            if isinstance(ex, BrokenServiceException):
-                raise
-            raise BrokenServiceException(
-                "Error parsing json: {}. {} (expected: {})".format(attack_results, ex, self.flag))
 
     async def putnoise(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
         pass
