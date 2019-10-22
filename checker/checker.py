@@ -56,6 +56,7 @@ class WaspChecker(BaseChecker):
                 raise BrokenServiceException("Could not find tag in db")
             tag = tag["flag"]
 
+            logger.info(f"GET /api/SearchAttacks needle={tag}")
             r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/SearchAttacks", params={ "needle": tag})
             search_result = await r.text()
             try:
@@ -65,7 +66,7 @@ class WaspChecker(BaseChecker):
                 raise BrokenServiceException(f"Invalid search response: {search_result}")
 
             logger.info(f"Fetching attack id={attack_id} password={task.flag}")
-            r = await session.get("/api/GetAttack", params={"id": id, "password": self.flag}, timeout=5, verify=False)
+            r = await session.get("/api/GetAttack", params={"id": attack_id, "password": self.flag}, timeout=5, verify=False)
             get_result = await r.text()
             try:
                 matches = json.loads(await r.text())
