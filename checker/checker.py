@@ -66,7 +66,7 @@ class WaspChecker(BaseChecker):
                 raise BrokenServiceException(f"Invalid search response: {search_result}")
 
             logger.info(f"Fetching attack id={attack_id} password={task.flag}")
-            r = await session.get("/api/GetAttack", params={"id": attack_id, "password": task.flag}, timeout=5)
+            r = await session.get("http://" + task.adress + ":" + str(WaspChecker.port) + "/api/GetAttack", params={"id": attack_id, "password": task.flag}, timeout=5)
             get_result = await r.text()
             try:
                 matches = json.loads(await r.text())
