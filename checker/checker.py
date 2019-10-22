@@ -66,14 +66,14 @@ class WaspChecker(BaseChecker):
                 raise BrokenServiceException(f"Invalid search response: {search_result}")
 
             logger.info(f"Fetching attack id={attack_id} password={task.flag}")
-            r = await session.get("/api/GetAttack", params={"id": attack_id, "password": self.flag}, timeout=5, verify=False)
+            r = await session.get("/api/GetAttack", params={"id": attack_id, "password": task.flag}, timeout=5, verify=False)
             get_result = await r.text()
             try:
                 matches = json.loads(await r.text())
             except:
                 raise BrokenServiceException(f"Invalid get response: {get_result}")
-            flag_field = "attackDate" if self.flag_idx % 2 == 0 else "location"
-            if matches["attack"][flag_field] != self.flag:
+            flag_field = "attackDate" if task.flagIndex % 2 == 0 else "location"
+            if matches["attack"][flag_field] != task.flag:
                 raise BrokenServiceException(
                     "Incorrect flag in date field (searched for {} in {} - {})".format(task.flag, matches,
                                                                                        flag_field))
