@@ -54,7 +54,7 @@ class WaspChecker(BaseChecker):
             tag = await collection.find_one({ 'flag': task.flag })
             if tag is None:
                 raise BrokenServiceException("Could not find tag in db")
-            tag = tag["flag"]
+            tag = tag["tag"]
 
             logger.info(f"GET /api/SearchAttacks needle={tag}")
             r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/SearchAttacks", params={ "needle": tag})
