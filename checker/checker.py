@@ -51,7 +51,7 @@ class WaspChecker(BaseChecker):
 
     async def getflag(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
         async with aiohttp.ClientSession() as session:
-            tag = collection.find_one({ 'flag': task.flag })
+            tag = await collection.find_one({ 'flag': task.flag })
             if tag is None:
                 raise BrokenServiceException("Could not find tag in db")
 
