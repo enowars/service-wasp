@@ -21,7 +21,7 @@ class WaspChecker(BaseChecker):
         await collection.insert_one({ 'flag' : task.flag, 'tag': tag })
 
         logger.debug("Putting Flag...")
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(raise_for_status=True) as session:
             # / because why not
             try:
                 await session.get("http://" + task.address + ":" + str(WaspChecker.port))
@@ -46,30 +46,30 @@ class WaspChecker(BaseChecker):
             try:
                 await session.post("http://" + task.address + ":" + str(WaspChecker.port) + "/api/AddAttack", data=attack)
             except:
-                raise BrokenServiceException()
+                raise BrokenServiceException("/AddAttack failed")
             logger.debug("Flag {} up with tag: {}.".format(task.flag, tag))
 
     async def getflag(self, logger: LoggerAdapter, task: CheckerTaskMessage, collection: MotorCollection) -> None:
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(raise_for_status=True) as session:
             tag = await collection.find_one({ 'flag': task.flag })
             if tag is None:
                 raise BrokenServiceException("Could not find tag in db")
             tag = tag["tag"]
 
             logger.info(f"GET /api/SearchAttacks needle={tag}")
-            r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/SearchAttacks", params={ "needle": tag})
-            search_result = await r.text()
             try:
+                r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/SearchAttacks", params={ "needle": tag})
+                search_result = await r.text()
                 search_results = json.loads(search_result)
                 attack_id = search_results["matches"][0]["id"]
             except:
                 raise BrokenServiceException(f"Invalid search response: {search_result}")
 
             logger.info(f"Fetching attack id={attack_id} password={task.flag}")
-            r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/GetAttack", params={"id": attack_id, "password": task.flag}, timeout=5)
-            get_result = await r.text()
             try:
-                matches = json.loads(await r.text())
+                r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/GetAttack", params={"id": attack_id, "password": task.flag}, timeout=5)
+                get_result = await r.text()
+                matches = json.loads(get_result)
             except:
                 raise BrokenServiceException(f"Invalid get response: {get_result}")
             flag_field = "attackDate" if task.flagIndex % 2 == 0 else "location"
