@@ -58,6 +58,7 @@ class WaspChecker(BaseChecker):
 
             logger.info(f"GET /api/SearchAttacks needle={tag}")
             try:
+                search_result = None
                 r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/SearchAttacks", params={ "needle": tag})
                 search_result = await r.text()
                 search_results = json.loads(search_result)
@@ -67,6 +68,7 @@ class WaspChecker(BaseChecker):
 
             logger.info(f"Fetching attack id={attack_id} password={task.flag}")
             try:
+                get_result = None
                 r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/GetAttack", params={"id": attack_id, "password": task.flag}, timeout=5)
                 get_result = await r.text()
                 matches = json.loads(get_result)
