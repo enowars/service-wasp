@@ -8,6 +8,14 @@ trigger:
 
 pool:
   vmImage: 'ubuntu-latest'
+  
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
+  always: true
 
 variables:
   buildConfiguration: 'Release'
