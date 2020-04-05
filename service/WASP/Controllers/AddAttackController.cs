@@ -12,10 +12,17 @@ namespace WASP.Controllers
     [Route("api/[controller]")]
     public class AddAttackController : Controller
     {
-        [HttpPost]
-        public IActionResult Post(string date, string location, string description, string password)
+        private readonly IWaspDb Db;
+
+        public AddAttackController(IWaspDb db)
         {
-            WaspDbContext.AddAttack(date, location, description, password);
+            Db = db;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Post(string date, string location, string description, string password)
+        {
+            await Db.AddAttack(date, location, description, password);
             return Accepted();
         }
     }

@@ -15,7 +15,6 @@ namespace WASP
     {
         public static void Main(string[] args)
         {
-            WaspDbContext.Migrate();
             CreateWebHostBuilder(args).Build().Run();
         }
 

@@ -1,6 +1,5 @@
-*.vs/
-*.vscode/
-*.db
-*/bin/
-*/obj/
-data/
+.vs
+.vscode
+WASP/bin/
+WASP/obj/
+WASP/wwwroot/data/Wasp.db

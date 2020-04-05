@@ -10,10 +10,17 @@ namespace WASP.Controllers
     [Route("api/[controller]")]
     public class SearchAttacksController : Controller
     {
-        [HttpGet]
-        public IActionResult Get(string needle)
+        private readonly IWaspDb Db;
+
+        public SearchAttacksController(IWaspDb db)
         {
-            var matches = WaspDbContext.GetMatchingAttacks(needle);
+            Db = db;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Get(string needle)
+        {
+            var matches = await Db.GetMatchingAttacks(needle);
             // clear all confidential data
             matches.ForEach(m =>
             {

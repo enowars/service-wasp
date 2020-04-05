@@ -1,9 +1,5 @@
 {
   "profiles": {
-    "Docker": {
-      "commandName": "Docker",
-      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}"
-    },
     "WASP": {
       "commandName": "Project",
       "environmentVariables": {

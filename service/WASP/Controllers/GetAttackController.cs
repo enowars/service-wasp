@@ -10,10 +10,17 @@ namespace WASP.Controllers
     [Route("api/[controller]")]
     public class GetAttackController : Controller
     {
-        [HttpGet]
-        public IActionResult Get(int id, string password)
+        private readonly IWaspDb Db;
+
+        public GetAttackController(IWaspDb db)
         {
-            var attack = WaspDbContext.GetAttack(id, password);
+            Db = db;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Get(int id, string password)
+        {
+            var attack = await Db.GetAttack(id, password);
             return Json(new { attack });
         }
     }

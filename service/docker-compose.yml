@@ -3,5 +3,9 @@ version: '3.4'
 services:
   wasp:
     build:
-      context: .
-      dockerfile: WASP/Dockerfile
+      context: WASP
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    volumes:
+      - ./data:/app/wwwroot/data
