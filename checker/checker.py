@@ -72,7 +72,7 @@ class WaspChecker(BaseChecker):
                 r = await session.get("http://" + task.address + ":" + str(WaspChecker.port) + "/api/GetAttack", params={"id": attack_id, "password": task.flag}, timeout=5)
                 get_result = await r.text()
                 matches = json.loads(get_result)
-                flag_field = "attackDate" if task.flagIndex % 2 == 0 else "location"
+                flag_field = "attackDate" if task.flag_index % 2 == 0 else "location"
                 found_flag = matches["attack"][flag_field]
             except:
                 raise BrokenServiceException(f"Invalid get response: {get_result}")
