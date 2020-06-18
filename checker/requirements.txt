@@ -1,2 +1,2 @@
-enochecker-async>=0.2
+enochecker-async>=0.4.1
 aiohttp
