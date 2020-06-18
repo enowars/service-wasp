@@ -27,7 +27,7 @@ class WaspChecker(BaseChecker):
                 await session.get("http://" + task.address + ":" + str(WaspChecker.port))
             except Exception:
                 raise OfflineException()
-            if task.flagIndex % 2 == 0:
+            if task.flag_index % 2 == 0:
                 attack = {
                     "date": task.flag,
                     "location": "Berlin",
