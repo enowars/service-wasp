@@ -21,7 +21,7 @@ namespace WASP.Controllers
         public async Task<IActionResult> Get(int id, string password)
         {
             var attack = await Db.GetAttack(id, password);
-            return Json(new { attack });
+            return Json(attack);
         }
     }
 }

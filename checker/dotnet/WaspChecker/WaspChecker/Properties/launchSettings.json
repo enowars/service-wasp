@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "WaspChecker": {
+      "commandName": "Executable"
+    }
+  }
+}
