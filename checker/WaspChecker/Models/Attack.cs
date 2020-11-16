@@ -1,13 +1,13 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace WaspChecker.Models
+﻿namespace WaspChecker.Models
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using MongoDB.Bson;
+    using MongoDB.Bson.Serialization.Attributes;
+
     public record Attack(
         long Id,
         string? Password,

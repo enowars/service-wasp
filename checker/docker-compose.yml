@@ -1,13 +1,11 @@
 version: '3'
 services:
-  gamemaster-checker:
-    build:
-      context: WaspChecker
-      dockerfile: Dockerfile
+  wasp-checker:
+    build: .
     environment:
       - MONGO_HOST=mongodb
       - MONGO_PORT=27017
-      #- USE_ELK=true
+      - USE_ELK=true
     ports:
       - "8001:80"
   mongodb:

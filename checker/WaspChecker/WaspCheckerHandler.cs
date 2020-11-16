@@ -1,26 +1,27 @@
-﻿using Bogus;
-using EnoCore;
-using EnoCore.Checker;
-using EnoCore.Models;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
-using System.Net.Http;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using WaspChecker.Models;
-
-namespace WaspChecker
+﻿namespace WaspChecker
 {
-    public class WaspChecker : IChecker
+    using System;
+    using System.Linq;
+    using System.Net.Http;
+    using System.Security.Cryptography;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Bogus;
+    using EnoCore;
+    using EnoCore.Checker;
+    using EnoCore.Models;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using WaspChecker.Models;
+
+    public class WaspCheckerHandler : IChecker
     {
-        private readonly ILogger<WaspChecker> logger;
+        private readonly ILogger<WaspCheckerHandler> logger;
         private readonly WaspCheckerDb checkerDb;
         private readonly WaspClient waspClient;
 
-        public WaspChecker(ILogger<WaspChecker> logger, WaspClient waspClient, WaspCheckerDb checkerDb)
+        public WaspCheckerHandler(ILogger<WaspCheckerHandler> logger, WaspClient waspClient, WaspCheckerDb checkerDb)
         {
             this.logger = logger;
             this.checkerDb = checkerDb;
@@ -29,25 +30,26 @@ namespace WaspChecker
 
         public async Task HandleGetFlag(CheckerTaskMessage task, CancellationToken token)
         {
-            var tag = ToWaspTag(task);
-            DatabaseAttack dbAttack = await checkerDb.GetByTag(tag, token);
-            var matches = await waspClient.SearchAttack(task.Address, dbAttack.Tag, token);
+            var tag = this.ToWaspTag(task);
+            DatabaseAttack dbAttack = await this.checkerDb.GetByTag(tag, token);
+            var matches = await this.waspClient.SearchAttack(task.Address, dbAttack.Tag, token);
             long id = 0;
             foreach (var result in matches)
             {
                 if (result.Content?.Content == dbAttack.Description)
                 {
-                    logger.LogInformation($"Found attack {result}!");
+                    this.logger.LogInformation($"Found attack {result}!");
                     id = result.Id;
                     break;
                 }
             }
+
             if (id == 0)
             {
                 throw new MumbleException("Missing attack in /api/SearchAttack result");
             }
 
-            Attack attack = await waspClient.GetAttack(task.Address, id, dbAttack.Password, token);
+            Attack attack = await this.waspClient.GetAttack(task.Address, id, dbAttack.Password, token);
             if (attack.Content?.Content != dbAttack.Description ||
                 attack.Location != dbAttack.Location ||
                 attack.AttackDate != dbAttack.AttackDate)
@@ -61,14 +63,21 @@ namespace WaspChecker
             return Task.CompletedTask;
         }
 
-        public Task HandleHavoc(CheckerTaskMessage task, CancellationToken token)
+        public async Task HandleHavoc(CheckerTaskMessage task, CancellationToken token)
         {
-            return Task.CompletedTask;
+            if (task.FlagIndex % 2 == 0)
+            {
+                await this.waspClient.CheckIndexHtml(task.Address, token);
+            }
+            else if (task.FlagIndex % 2 == 1)
+            {
+                await this.waspClient.CheckWaspImage(task.Address, token);
+            }
         }
 
         public async Task HandlePutFlag(CheckerTaskMessage task, CancellationToken token)
         {
-            var tag = ToWaspTag(task);
+            var tag = this.ToWaspTag(task);
             var storeIndex = task.FlagIndex % 2;
             DatabaseAttack attack = CreateAttack(tag);
             if (storeIndex == 0)
@@ -79,10 +88,10 @@ namespace WaspChecker
             {
                 attack.Location = task.Flag!;
             }
-            
-            await waspClient.CreateAttack(task.Address, attack, token);
-            logger.LogDebug($"Saving DatabaseAttack {attack}");
-            await checkerDb.AddAttack(attack, token);
+
+            await this.waspClient.CreateAttack(task.Address, attack, token);
+            this.logger.LogDebug($"Saving DatabaseAttack {attack}");
+            await this.checkerDb.AddAttack(attack, token);
         }
 
         public Task HandlePutNoise(CheckerTaskMessage task, CancellationToken token)
@@ -106,26 +115,28 @@ namespace WaspChecker
             return attack;
         }
 
-        private string ToWaspTag(CheckerTaskMessage ctm)
-        {
-            string rawTag = $"{Enum.GetName(ctm.Method)?.Replace("put", "").Replace("get", "")}_{ctm.RelatedRoundId}_{ctm.TeamId}_{ctm.FlagIndex}";
-            logger.LogInformation($"WaspTag = {rawTag}");
-            return GetHashString(rawTag);
-        }
-
-        public static byte[] GetHash(string inputString)
+        private static byte[] GetHash(string inputString)
         {
             using HashAlgorithm algorithm = SHA256.Create();
             return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
         }
 
-        public static string GetHashString(string inputString)
+        private static string GetHashString(string inputString)
         {
             StringBuilder sb = new StringBuilder();
             foreach (byte b in GetHash(inputString))
+            {
                 sb.Append(b.ToString("X2"));
+            }
 
             return sb.ToString();
+        }
+
+        private string ToWaspTag(CheckerTaskMessage ctm)
+        {
+            string rawTag = $"{Enum.GetName(ctm.Method)?.Replace("put", string.Empty).Replace("get", string.Empty)}_{ctm.RelatedRoundId}_{ctm.TeamId}_{ctm.FlagIndex}";
+            this.logger.LogInformation($"WaspTag = {rawTag}");
+            return GetHashString(rawTag);
         }
     }
 }
