@@ -11,47 +11,29 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using WaspChecker.Models;
-using WaspChecker.Database;
 
 namespace WaspChecker
 {
     public class WaspChecker : IChecker
     {
         private readonly ILogger<WaspChecker> logger;
-        private readonly HttpClient httpClient;
         private readonly WaspCheckerDb checkerDb;
+        private readonly WaspClient waspClient;
 
-        public WaspChecker(ILogger<WaspChecker> logger, WaspCheckerDb db)
+        public WaspChecker(ILogger<WaspChecker> logger, WaspClient waspClient, WaspCheckerDb checkerDb)
         {
             this.logger = logger;
-            this.checkerDb = db;
-            this.httpClient = new HttpClient();
+            this.checkerDb = checkerDb;
+            this.waspClient = waspClient;
         }
-
-        public int FlagsPerRound => 1;
-
-        public int NoisesPerRound => 0;
-
-        public int HavocsPerRound => 0;
 
         public async Task HandleGetFlag(CheckerTaskMessage task, CancellationToken token)
         {
-            var client = new WaspClient(logger, new HttpClient(), task.Address);
             var tag = ToWaspTag(task);
-            DatabaseAttack dbAttack;
-            try
-            {
-                dbAttack = await checkerDb.GetByTag(tag, token);
-            }
-            catch (Exception e)
-            {
-                logger.LogWarning($"Could not find old attack: {e.ToFancyString()}");
-                throw new MumbleException("Could not find old attack, most likely putflag failed");
-            }
-            
-            var matches = await client.SearchAttack(dbAttack.Tag, token);
+            DatabaseAttack dbAttack = await checkerDb.GetByTag(tag, token);
+            var matches = await waspClient.SearchAttack(task.Address, dbAttack.Tag, token);
             long id = 0;
-            foreach (var result in matches.Matches)
+            foreach (var result in matches)
             {
                 if (result.Content?.Content == dbAttack.Description)
                 {
@@ -65,8 +47,8 @@ namespace WaspChecker
                 throw new MumbleException("Missing attack in /api/SearchAttack result");
             }
 
-            Attack attack = await client.GetAttack(id, dbAttack.Password, token);
-            if (attack.Description != dbAttack.Description ||
+            Attack attack = await waspClient.GetAttack(task.Address, id, dbAttack.Password, token);
+            if (attack.Content?.Content != dbAttack.Description ||
                 attack.Location != dbAttack.Location ||
                 attack.AttackDate != dbAttack.AttackDate)
             {
@@ -97,11 +79,8 @@ namespace WaspChecker
             {
                 attack.Location = task.Flag!;
             }
-            using var sha = SHA256.Create();
-
-            var client = new WaspClient(this.logger, this.httpClient, task.Address);
             
-            await client.CreateAttack(attack, token);
+            await waspClient.CreateAttack(task.Address, attack, token);
             logger.LogDebug($"Saving DatabaseAttack {attack}");
             await checkerDb.AddAttack(attack, token);
         }
@@ -130,7 +109,7 @@ namespace WaspChecker
         private string ToWaspTag(CheckerTaskMessage ctm)
         {
             string rawTag = $"{Enum.GetName(ctm.Method)?.Replace("put", "").Replace("get", "")}_{ctm.RelatedRoundId}_{ctm.TeamId}_{ctm.FlagIndex}";
-            logger.LogInformation(rawTag);
+            logger.LogInformation($"WaspTag = {rawTag}");
             return GetHashString(rawTag);
         }
 

@@ -10,32 +10,29 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using WaspChecker.Models;
-using WaspChecker.Database;
 
 namespace WaspChecker
 {
-    internal class WaspClient
+    public class WaspClient
     {
         private const int port = 8000;
         private readonly ILogger logger;
         private readonly HttpClient httpClient;
-        private readonly string address;
         private readonly JsonSerializerOptions jsonOptions;
 
-        public WaspClient(ILogger logger, HttpClient httpClient, string address)
+        public WaspClient(ILogger<WaspClient> logger, HttpClient httpClient)
         {
             this.logger = logger;
             this.httpClient = httpClient;
-            this.address = address;
             this.jsonOptions = new JsonSerializerOptions()
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
         }
 
-        public async Task CreateAttack(DatabaseAttack attack, CancellationToken token)
+        public async Task CreateAttack(string address, DatabaseAttack attack, CancellationToken token)
         {
-            var url = $"http://{this.address}:{port}/api/AddAttack";
+            var url = $"http://{address}:{port}/api/AddAttack";
             logger.LogDebug($"CreateAttack {attack}");
             var request = new HttpRequestMessage(HttpMethod.Post, url)
             {
@@ -63,9 +60,9 @@ namespace WaspChecker
             }
         }
 
-        public async Task<AttackMatches> SearchAttack(string needle, CancellationToken token)
+        public async Task<List<Attack>> SearchAttack(string address, string needle, CancellationToken token)
         {
-            var url = $"http://{this.address}:{port}/api/SearchAttacks?needle={needle}";
+            var url = $"http://{address}:{port}/api/SearchAttacks?needle={needle}";
             logger.LogDebug($"SearchAttack {needle}");
             HttpResponseMessage response;
             try
@@ -83,10 +80,10 @@ namespace WaspChecker
                 throw new MumbleException("/api/SearchAttacks returned unsuccessful status code");
             }
 
-            AttackMatches? receivedMatches;
+            List<Attack>? receivedMatches;
             try
             {
-                receivedMatches = JsonSerializer.Deserialize<AttackMatches>(
+                receivedMatches = JsonSerializer.Deserialize<List<Attack>>(
                     await response.Content.ReadAsStringAsync(token), jsonOptions);
             }
             catch (Exception e)
@@ -101,7 +98,7 @@ namespace WaspChecker
                 throw new MumbleException("Could not deserialize /api/SearchAttacks result");
             }
 
-            foreach (var match in receivedMatches.Matches)
+            foreach (var match in receivedMatches)
             {
                 if (match.Id == 0)
                 {
@@ -112,9 +109,9 @@ namespace WaspChecker
             return receivedMatches;
         }
 
-        public async Task<Attack> GetAttack(long id, string pw, CancellationToken token)
+        public async Task<Attack> GetAttack(string address, long id, string pw, CancellationToken token)
         {
-            var url = $"http://{this.address}:{port}/api/GetAttack?id={id}&password={pw}";
+            var url = $"http://{address}:{port}/api/GetAttack?id={id}&password={pw}";
             logger.LogDebug($"SearchAttack {id} {pw}");
             string response;
             try

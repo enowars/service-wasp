@@ -6,7 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using WaspChecker.Models;
-using WaspChecker.Database;
+using EnoCore.Checker;
+using Microsoft.Extensions.Logging;
+using EnoCore;
 
 namespace WaspChecker
 {
@@ -19,9 +21,11 @@ namespace WaspChecker
         public static string MongoConnection => $"mongodb://{MongoHost}:{MongoPort}";
         private readonly IMongoCollection<DatabaseAttack> Attacks;
         private readonly InsertOneOptions InsertOneOptions = new InsertOneOptions() { BypassDocumentValidation = false };
+        private readonly ILogger<WaspCheckerDb> logger;
 
-        public WaspCheckerDb()
+        public WaspCheckerDb(ILogger<WaspCheckerDb> logger)
         {
+            this.logger = logger;
             var mongo = new MongoClient(MongoConnection);
             var db = mongo.GetDatabase("WaspCheckerDb");
             Attacks = db.GetCollection<DatabaseAttack>("Attacks");
@@ -37,8 +41,16 @@ namespace WaspChecker
         public async Task<DatabaseAttack> GetByTag(string tag, CancellationToken token)
         {
             var results = await Attacks.FindAsync(a => a.Tag == tag, cancellationToken: token);
-            var dbAttack = await results.SingleAsync(cancellationToken: token);
-            return dbAttack;
+            try
+            {
+                var dbAttack = await results.SingleAsync(cancellationToken: token);
+                return dbAttack;
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning($"Could not find old attack: {e.ToFancyString()}");
+                throw new MumbleException("Could not find old attack, most likely putflag failed");
+            }
         }
     }
 }

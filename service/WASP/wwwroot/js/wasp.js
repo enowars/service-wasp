@@ -13,11 +13,10 @@ function init() {
                     container[0].removeChild(container[0].firstChild);
                 }
                 var table = $('<table id="results-table"></table>');
-                var matches = data["matches"];
                 header = `<tr><th>Description</th><th>Action</th></tr>`;
                 table.append($(header));
-                for (var match in matches) {
-                    var attack = matches[match];
+                for (var match in data) {
+                    var attack = data[match];
                     console.log(attack);
                     var description = attack.content.content;
                     row = `<tr><td>${description}</td><td><button onclick="inspectAttack(${attack.id})">Inspect</button></tr>`;
@@ -41,12 +40,10 @@ function init() {
 }
 
 function inspectAttack(id) {
-    var pw = prompt("Passwrd?");
+    var pw = prompt("Password?");
     var jqxhr = $.get(`api/GetAttack?id=${id}&password=${pw}`,
         function (data) {
             console.log(data);
-            if (data.attack) {
-                alert(`Date: ${data.attack.attackDate}\nLocation: ${data.attack.location}`);
-            }
+            alert(`Date: ${data.attackDate}\nLocation: ${data.location}`);
         });
 }

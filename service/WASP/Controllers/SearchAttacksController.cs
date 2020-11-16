@@ -27,7 +27,7 @@ namespace WASP.Controllers
                 m.AttackDate = null;
                 m.Password = null;
             });
-            return Json(new { matches });
+            return Json(matches);
         }
     }
 }

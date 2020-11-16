@@ -10,11 +10,12 @@ namespace WaspChecker.Models
 {
     public record Attack(
         long Id,
-        string Password,
-        string Location,
-        string AttackDate,
-        string Description)
-    {
+        string? Password,
+        string? Location,
+        string? AttackDate,
+        AttackDescriptionContent? Content);
 
-    }
+    public record AttackDescriptionContent(
+        long Rowid,
+        string Content);
 }
