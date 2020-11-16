@@ -19,20 +19,21 @@
     {
         private readonly ILogger<WaspCheckerHandler> logger;
         private readonly WaspCheckerDb checkerDb;
-        private readonly WaspClient waspClient;
+        private readonly IServiceProvider serviceProvider;
 
-        public WaspCheckerHandler(ILogger<WaspCheckerHandler> logger, WaspClient waspClient, WaspCheckerDb checkerDb)
+        public WaspCheckerHandler(ILogger<WaspCheckerHandler> logger, WaspCheckerDb checkerDb, IServiceProvider serviceProvider)
         {
             this.logger = logger;
             this.checkerDb = checkerDb;
-            this.waspClient = waspClient;
+            this.serviceProvider = serviceProvider;
         }
 
         public async Task HandleGetFlag(CheckerTaskMessage task, CancellationToken token)
         {
             var tag = this.ToWaspTag(task);
             DatabaseAttack dbAttack = await this.checkerDb.GetByTag(tag, token);
-            var matches = await this.waspClient.SearchAttack(task.Address, dbAttack.Tag, token);
+            var waspClient = this.serviceProvider.GetRequiredService<WaspClient>();
+            var matches = await waspClient.SearchAttack(task.Address, dbAttack.Tag, token);
             long id = 0;
             foreach (var result in matches)
             {
@@ -49,7 +50,7 @@
                 throw new MumbleException("Missing attack in /api/SearchAttack result");
             }
 
-            Attack attack = await this.waspClient.GetAttack(task.Address, id, dbAttack.Password, token);
+            Attack attack = await waspClient.GetAttack(task.Address, id, dbAttack.Password, token);
             if (attack.Content?.Content != dbAttack.Description ||
                 attack.Location != dbAttack.Location ||
                 attack.AttackDate != dbAttack.AttackDate)
@@ -65,18 +66,20 @@
 
         public async Task HandleHavoc(CheckerTaskMessage task, CancellationToken token)
         {
+            var waspClient = this.serviceProvider.GetRequiredService<WaspClient>();
             if (task.FlagIndex % 2 == 0)
             {
-                await this.waspClient.CheckIndexHtml(task.Address, token);
+                await waspClient.CheckIndexHtml(task.Address, token);
             }
             else if (task.FlagIndex % 2 == 1)
             {
-                await this.waspClient.CheckWaspImage(task.Address, token);
+                await waspClient.CheckWaspImage(task.Address, token);
             }
         }
 
         public async Task HandlePutFlag(CheckerTaskMessage task, CancellationToken token)
         {
+            var waspClient = this.serviceProvider.GetRequiredService<WaspClient>();
             var tag = this.ToWaspTag(task);
             var storeIndex = task.FlagIndex % 2;
             DatabaseAttack attack = CreateAttack(tag);
@@ -89,7 +92,7 @@
                 attack.Location = task.Flag!;
             }
 
-            await this.waspClient.CreateAttack(task.Address, attack, token);
+            await waspClient.CreateAttack(task.Address, attack, token);
             this.logger.LogDebug($"Saving DatabaseAttack {attack}");
             await this.checkerDb.AddAttack(attack, token);
         }

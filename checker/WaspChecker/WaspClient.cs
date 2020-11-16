@@ -8,6 +8,7 @@
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
+    using Bogus;
     using EnoCore;
     using EnoCore.Checker;
     using Microsoft.Extensions.Logging;
@@ -19,6 +20,7 @@
         private readonly ILogger logger;
         private readonly HttpClient httpClient;
         private readonly JsonSerializerOptions jsonOptions;
+        private readonly string userAgent;
 
         public WaspClient(ILogger<WaspClient> logger, HttpClient httpClient)
         {
@@ -28,6 +30,7 @@
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
+            this.userAgent = new Faker("de").Internet.UserAgent();
         }
 
         public async Task CreateAttack(string address, DatabaseAttack attack, CancellationToken token)
@@ -44,6 +47,7 @@
                     new KeyValuePair<string?, string?>("password", attack.Password),
                 }),
             };
+            request.Headers.Add("User-Agent", this.userAgent);
             HttpResponseMessage response;
             try
             {
@@ -65,10 +69,12 @@
         {
             var url = $"http://{address}:{Port}/api/SearchAttacks?needle={needle}";
             this.logger.LogDebug($"SearchAttack {needle}");
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("User-Agent", this.userAgent);
             HttpResponseMessage response;
             try
             {
-                response = await this.httpClient.GetAsync(url, token);
+                response = await this.httpClient.SendAsync(request, token);
             }
             catch (Exception e)
             {
@@ -133,10 +139,12 @@
         {
             var url = $"http://{address}:{Port}/api/GetAttack?id={id}&password={pw}";
             this.logger.LogDebug($"SearchAttack {id} {pw}");
-            string response;
+            var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
+            request.Headers.Add("User-Agent", this.userAgent);
+            HttpResponseMessage response;
             try
             {
-                response = await this.httpClient.GetStringAsync(new Uri(url), token);
+                response = await this.httpClient.SendAsync(request, token);
             }
             catch (Exception e)
             {
@@ -147,7 +155,7 @@
             Attack? a;
             try
             {
-                a = JsonSerializer.Deserialize<Attack>(response, this.jsonOptions);
+                a = JsonSerializer.Deserialize<Attack>(await response.Content.ReadAsStringAsync(token), this.jsonOptions);
             }
             catch (Exception e)
             {

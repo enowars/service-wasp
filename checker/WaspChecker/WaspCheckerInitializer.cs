@@ -22,7 +22,6 @@
         public void Initialize(IServiceCollection collection)
         {
             collection.AddSingleton(typeof(WaspCheckerDb));
-            collection.AddScoped(typeof(WaspClient));
             collection.AddHttpClient<WaspClient>()
                 .ConfigureHttpMessageHandlerBuilder(builder =>
                 {
@@ -33,6 +32,7 @@
                         handler.AllowAutoRedirect = false;
                     }
                 });
+            collection.AddScoped(typeof(WaspClient));
         }
     }
 }

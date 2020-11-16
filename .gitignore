@@ -3,6 +3,7 @@
 logs/
 bin/
 obj/
+launchSettings.json
 __py_cache__
 *.pyc
 .idea
