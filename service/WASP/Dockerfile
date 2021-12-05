@@ -19,4 +19,5 @@ FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 WORKDIR /app
 EXPOSE 443
 COPY --from=build /app .
+COPY --from=build /src/cert.pfx .
 ENTRYPOINT ["dotnet", "WASP.dll"]
