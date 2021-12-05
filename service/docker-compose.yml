@@ -6,6 +6,6 @@ services:
       context: WASP
       dockerfile: Dockerfile
     ports:
-      - "8000:80"
+      - "8443:443"
     volumes:
       - ./data:/app/wwwroot/data

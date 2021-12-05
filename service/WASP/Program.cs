@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -19,7 +20,15 @@ namespace WASP
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+            WebHost.CreateDefaultBuilder(args).ConfigureKestrel(serverOptions =>
+            {
+                serverOptions.Listen(IPAddress.Any, 443, listenOptions => { listenOptions.UseHttps("cert.pfx", "pass"); });
+                serverOptions.ConfigureHttpsDefaults(configureOptions: co =>
+                 {
+                     co.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+                 });
+            }
+            )
                 .UseStartup<Startup>();
     }
 }
