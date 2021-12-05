@@ -8,7 +8,9 @@ RUN apt-get update && \
     rm server.pass.key && \
     openssl req -new -key server.key -out server.csr \
         -subj "/O=BAMBICTF/OU= 🐝🐝🐝 WASP Attack Coordination Dpt Ltd/CN=wasp.com" && \
-    openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+    openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt && \
+    openssl pkcs12 -export -out cert.pfx -inkey server.key -in server.crt && \
+    ls -alh
 RUN dotnet restore WASP.csproj
 COPY . .
 RUN dotnet publish WASP.csproj -c Release -o /app

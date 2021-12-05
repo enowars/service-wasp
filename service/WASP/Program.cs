@@ -22,7 +22,7 @@ namespace WASP
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args).ConfigureKestrel(serverOptions =>
             {
-                serverOptions.Listen(IPAddress.Any, 443, listenOptions => { listenOptions.UseHttps("cert.pfx", "pass"); });
+                serverOptions.Listen(IPAddress.Any, 443, listenOptions => { listenOptions.UseHttps("cert.pfx"); });
                 serverOptions.ConfigureHttpsDefaults(configureOptions: co =>
                  {
                      co.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
